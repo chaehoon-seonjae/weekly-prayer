@@ -297,8 +297,6 @@ function loadState(){
 function saveState(){
   // UI state is intentionally not persisted as prayer data. Supabase is the source of truth.
 }
-function prayedKey(weekId, name){ return `prayed:${weekId}:${name}`; }
-
 let state = loadState();
 state.currentWeek = defaultMeetingId?.() || state.currentWeek;
 let collapsedCards = {}; // name -> bool
@@ -418,8 +416,8 @@ function render(){
   } else {
     cardsHtml = `<div class="cards">` + names.map(name=>{
       const e = entries[name];
-      const alreadyPrayed = !!localStorage.getItem(prayedKey(state.currentWeek, name));
       const collapsed = collapsedCards[name] !== false && e.items.length > 3;
+      const hasPrayedBefore = !!localStorage.getItem(`prayed:${state.currentWeek}:${name}`);
       return `
         <div class="card ${collapsed?'collapsed':''}" data-name="${name}">
           <div class="card-top">
@@ -436,9 +434,9 @@ function render(){
           </div>
           ${e.items.length>3 ? `<span class="more-toggle" data-toggle="${name}">${collapsed?'더보기':'접기'}</span>` : ``}
           <div class="card-bottom">
-            <button class="pray-btn ${alreadyPrayed?'done':''}" data-pray="${name}" ${alreadyPrayed?'disabled':''}>
+            <button class="pray-btn ${hasPrayedBefore ? 'done' : ''}" data-pray="${name}">
               <span class="glow"></span>
-              🙏 ${alreadyPrayed ? '함께 기도했어요' : '기도했어요'} <span class="count mono">· ${e.prayed}</span>
+              🙏 ${hasPrayedBefore ? '함께 기도했어요' : '기도했어요'} <span class="count mono">· ${e.prayed}</span>
             </button>
           </div>
         </div>
@@ -499,21 +497,19 @@ function bindHomeEvents(){
   document.querySelectorAll("[data-pray]").forEach(el=>{
     el.onclick = async ()=>{
       const name = el.dataset.pray;
-      const key = prayedKey(state.currentWeek, name);
-      if(localStorage.getItem(key)) return;
       const entry = state.entries[state.currentWeek][name];
       const nextCount = (entry.prayed || 0) + 1;
       if(USE_SUPABASE && window.__db && entry.id){
         const {error} = await window.__db.from("prayers").update({prayed_count:nextCount}).eq("id", entry.id);
         if(error){ console.error(error); showToast("저장 중 오류가 발생했어요"); return; }
       }
-      localStorage.setItem(key, "1");
+      localStorage.setItem(`prayed:${state.currentWeek}:${name}`, "1");
       entry.prayed = nextCount;
       if(!USE_SUPABASE) saveState();
       const glow = el.querySelector(".glow");
       glow.classList.add("play");
       el.classList.add("done");
-      el.disabled = true;
+      el.innerHTML = `<span class="glow"></span> 🙏 함께 기도했어요 <span class="count mono">· ${nextCount}</span>`;
       setTimeout(()=>render(), 550);
     };
   });
