@@ -60,7 +60,15 @@ body {
 .day-circle { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; }
 .calendar-day.completed .day-circle { background:var(--green-soft); color:var(--green-deep); }
 .calendar-day.today .day-circle { background:var(--sky-deep); color:#fff; font-weight:700; }
-.calendar-day.today.completed .day-circle { background:var(--sky-deep); color:#fff; box-shadow:inset 0 0 0 2px var(--green-deep); }
+.calendar-day.today.completed .day-circle { background:var(--sky-deep); color:#fff; box-shadow:none; }
+
+.qt-selected-date-wrap { margin:0 0 12px; }
+.qt-selected-date { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 12px; background:var(--sky-tint); border:1px solid rgba(91,124,191,0.12); border-radius:12px; font-size:13px; color:var(--navy); }
+.qt-selected-label { color:var(--slate); font-weight:600; }
+.qt-selected-date strong { font-weight:700; }
+.qt-selected-badge { display:inline-flex; align-items:center; justify-content:center; min-width:58px; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+.qt-selected-badge.done { background:var(--green-soft); color:var(--green-deep); }
+.qt-selected-badge.pending { background:#EEF3FF; color:var(--sky-deep); }
 
 /* ===== 통합 상세 패널 ===== */
 .detail-panel { padding:2px 4px; margin-bottom:20px; }
