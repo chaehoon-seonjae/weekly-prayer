@@ -478,13 +478,14 @@ select u.id,
 commit;
 
 -- ---------- 검증 ----------
+-- SQL Editor는 마지막 문장 결과만 표시하므로, 아래 4개는 한 줄씩 개별 실행한다(모두 읽기 전용).
 -- 기대: 0
 select count(*) as unmapped_prayers from public.prayers where profile_id is null;
 -- 기대: true
 select (select count(*) from public.members)
      = (select count(*) from public.profiles where legacy_member_id is not null) as members_all_migrated;
 -- 기대: 0행 (003에서 unique(meeting_id, profile_id) 추가 가능)
-select meeting_id, profile_id, count(*) from public.prayers group by 1, 2 having count(*) > 1;
+select meeting_id, profile_id, count(*) from public.prayers where profile_id is not null group by 1, 2 having count(*) > 1;
 -- 기대: 0
 select count(*) as users_without_profile
   from auth.users u where not exists (select 1 from public.profiles p where p.auth_user_id = u.id);
@@ -517,22 +518,28 @@ with b as (
 )
 update public.reflection_reactions set profile_id = '<LEGACY_PROFILE_ID>' where profile_id in (select id from b);
 
-delete from public.profiles where auth_user_id = '<AUTH_USER_ID>' and legacy_member_id is null;
+-- B를 참조하는 행이 남아 있으면 지우지 않는다(부분 실행 시 cascade 손실 방지). 그 경우 아래 update가 unique 충돌로 중단된다.
+delete from public.profiles p
+ where p.auth_user_id = '<AUTH_USER_ID>' and p.legacy_member_id is null
+   and not exists (select 1 from public.prayers              where profile_id = p.id)
+   and not exists (select 1 from public.qt_records           where profile_id = p.id)
+   and not exists (select 1 from public.reflections          where profile_id = p.id)
+   and not exists (select 1 from public.reflection_reactions where profile_id = p.id);
 
 update public.profiles
    set auth_user_id = '<AUTH_USER_ID>', updated_at = now()
  where id = '<LEGACY_PROFILE_ID>' and auth_user_id is null;
-
--- 기대: 1행, auth_user_id가 채워져 있음
-select id, nickname, auth_user_id, legacy_member_id from public.profiles where id = '<LEGACY_PROFILE_ID>';
 commit;
+
+-- 기대: 1행, auth_user_id가 채워져 있음 (SQL Editor는 마지막 문장 결과만 표시하므로 commit 뒤에 둔다)
+select id, nickname, auth_user_id, legacy_member_id from public.profiles where id = '<LEGACY_PROFILE_ID>';
 */
 ```
 
 - [ ] **Step 2: 운영 Supabase에서 실행**
 
 SQL Editor에 파일 전체 붙여넣기(주석 블록 포함 그대로) → Run.
-Expected: 검증 4개 결과 — `unmapped_prayers = 0`, `members_all_migrated = true`, 중복 0행, `users_without_profile = 0`.
+Expected: 오류 없음. 이어서 검증 쿼리 4개를 **한 줄씩 개별 실행** — `unmapped_prayers = 0`, `members_all_migrated = true`, 중복 0행, `users_without_profile = 0`.
 
 - [ ] **Step 3: 이관 결과 눈으로 확인**
 
