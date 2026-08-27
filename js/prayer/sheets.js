@@ -91,7 +91,10 @@ export function openWriteSheet({ meeting, existing }) {
     paintItems();
   };
 
-  sheet.querySelector('#btnSave').onclick = async () => {
+  const btnSave = sheet.querySelector('#btnSave');
+  btnSave.onclick = async () => {
+    if (btnSave.disabled) return; // 이중 제출 방지 (unique 제약은 003에서 추가됨)
+    btnSave.disabled = true;
     const cleaned = draftItems
       .map(it => ({
         title: it.title.trim(),
@@ -100,6 +103,7 @@ export function openWriteSheet({ meeting, existing }) {
       .filter(it => it.title.length > 0);
 
     if (cleaned.length === 0) {
+      btnSave.disabled = false;
       showToast('기도제목을 한 가지 이상 입력해주세요');
       return;
     }
@@ -121,6 +125,8 @@ export function openWriteSheet({ meeting, existing }) {
     } catch (error) {
       console.error(error);
       showToast('저장 중 오류가 발생했어요');
+    } finally {
+      btnSave.disabled = false;
     }
   };
 
