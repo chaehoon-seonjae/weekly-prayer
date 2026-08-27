@@ -152,6 +152,8 @@ onSignedIn():
 ├── package.json               # {"type":"module","scripts":{"test":"node --test 'tests/**/*.test.js'"}} — 의존성 없음
 └── js/
     ├── main.js                # 진입점 (3장 시퀀스)
+    ├── util/
+    │   └── date.js            # formatDateKey, todayKey (순수)
     ├── supabase.js            # window.supabase.createClient 1회 → export client
     ├── state.js               # appState, render() 디스패치, 탭 전환
     ├── ui/
@@ -176,6 +178,7 @@ onSignedIn():
     └── prayer/
         ├── api.js             # meetings/prayers 쿼리, increment_prayed RPC
         ├── meeting.js         # 순수: 정렬, 이전/다음, 이번 주/지난/다음 판정
+        ├── compile.js         # 순수: getDetailLines, buildCompiledText(전체 복사 텍스트)
         ├── page.js            # 기도제목 목록 화면
         └── sheets.js          # 작성/수정/삭제 확인/전체 복사 시트
 ```
@@ -232,7 +235,11 @@ getMonthGrid(year: number, month: number): Date[]                 // 42칸, 일�
 // prayer/meeting.js
 sortMeetingsAsc(meetings), adjacentMeeting(meetings, currentId, dir),
 defaultMeetingId(meetings, todayKey), classifyMeeting(meeting, meetings, todayKey)
-  // → 'current' | 'past' | 'future' | 'latest'
+  // → { isPast, isFuture, isLatest, isCurrent }  (headerLabel/navLabel(flags)이 라벨로 변환)
+// prayer/compile.js
+getDetailLines(item): string[], buildCompiledText(meeting, cards: { nickname, items }[]): string
+// util/date.js
+formatDateKey(date: Date): 'YYYY-MM-DD', todayKey(): string   // Phase 2·3 공용
 ```
 
 ---
