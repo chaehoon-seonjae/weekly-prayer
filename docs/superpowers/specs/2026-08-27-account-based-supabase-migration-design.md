@@ -74,7 +74,7 @@ README는 QT 기록(비공개) · 묵상 나눔(공개) · 주간 기도제목 �
 
 | 테이블 | SELECT | INSERT | UPDATE | DELETE |
 |---|---|---|---|---|
-| `profiles` | 전원 | ✗ (트리거만) | 본인 (`id = current_profile_id()`) | ✗ |
+| `profiles` | 전원 | ✗ (트리거만) | 본인 (`auth_user_id = auth.uid()`), **컬럼 단위로 `nickname`/`profile_image`/`updated_at`만** (`revoke update` + `grant update (…)`) | ✗ |
 | `meetings` | 전원 | ✗ | ✗ | ✗ |
 | `prayers` | 전원 | 본인 | 본인 | 본인 |
 | `qt_records` | **본인만** | 본인 | ✗ | ✗ (체크 해제 기능 없음) |
@@ -248,7 +248,7 @@ defaultMeetingId(meetings, todayKey), classifyMeeting(meeting, meetings, todayKe
 | 2 | `002_migrate.sql` | `members` → `profiles` (`nickname = name`, `display_order`, `auth_user_id NULL`, `legacy_member_id = members.id`). `prayers.profile_id` ← `member_id` 조인. 검증 쿼리. `link_legacy_profile` 스니펫 포함 | 정상 |
 | 3 | 순원 가입 + 관리자 연결 | 순원이 가입 → 트리거가 프로필 B 생성 → 관리자가 `link_legacy_profile` 스니펫으로 자리표시자 A에 `auth_user_id` 부여, B 삭제. 가입 안 한 순원은 A가 남아 이름만 표시 | 정상 |
 | 4 | 새 프론트 배포 | Netlify에 ES 모듈 구조 코드 배포 | 교체됨 |
-| 5 | `003_cutover.sql` | 새 프론트 안정화(며칠) 후. `prayers.profile_id set not null`, `unique(meeting_id, profile_id)`, `member_id` DROP, `prayers`·`meetings` RLS 활성화 + 정책, `members` DROP, `supabase/qt_schema.sql` 삭제 | 중단 (이미 교체됨) |
+| 5 | `003_cutover.sql` | 새 프론트 안정화(며칠) 후. **먼저 002의 (2)단계(`prayers.profile_id` 채움)를 재실행하고 `unmapped_prayers = 0` 재확인** (002~003 사이 옛 프론트가 쓴 행은 `profile_id` NULL). 이어서 `prayers.profile_id set not null`, `unique(meeting_id, profile_id)`, `member_id` DROP, `prayers`·`meetings` RLS 활성화 + 정책, `members` DROP, `supabase/qt_schema.sql` 삭제 | 중단 (이미 교체됨) |
 
 ### 검증 쿼리 (002 · 003에 포함)
 ```sql

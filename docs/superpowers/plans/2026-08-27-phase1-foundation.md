@@ -362,6 +362,9 @@ drop policy if exists profiles_update_self on public.profiles;
 create policy profiles_select_all  on public.profiles for select to authenticated using (true);
 create policy profiles_update_self on public.profiles for update to authenticated
   using (auth_user_id = auth.uid()) with check (auth_user_id = auth.uid());
+-- 컬럼 단위 제한: 본인 행이라도 nickname / profile_image / updated_at 외 컬럼(legacy_member_id, display_order 등)은 수정 불가
+revoke update on public.profiles from authenticated;
+grant  update (nickname, profile_image, updated_at) on public.profiles to authenticated;
 
 -- qt_records: 완전 비공개
 drop policy if exists qt_records_select_self on public.qt_records;
@@ -1390,3 +1393,4 @@ git commit -m "test(db): RLS 부정 케이스 검증 스크립트"
 - Phase 3(QT): `qt/*`, bootstrap에 `qt_records` 로드 추가, `qt` 자리표시자 교체, `qt.js` 삭제. **달력은 일요일 시작으로 통일**(기존 헤더/그리드 불일치 버그)
 - Phase 4(묵상): `reflection/*`
 - Phase 5: 카카오 공급자 설정·검증, `_tmp_check.js`·`app.js`·`supabase/qt_schema.sql` 삭제, README 갱신, `main` 머지·배포, `003_cutover.sql`
+  - **003 실행 직전 필수**: 002 반영 이후 옛 프론트가 작성한 `prayers`는 `profile_id`가 NULL이므로 `002_migrate.sql`의 (2)단계 UPDATE를 재실행하고 `unmapped_prayers = 0`을 재확인한 뒤 `set not null`을 건다.
