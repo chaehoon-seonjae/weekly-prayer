@@ -1140,4 +1140,4 @@ git commit -m "chore: 옛 prayer.js 제거, rls_check 진단 보강"
 ## 다음 Phase로 넘길 것
 - Phase 3(QT): `qt/api.js`·`streak.js`·`growth.js`·`calendar.js`·`page.js`, bootstrap에 `qt_records` 로드, `qt` 자리표시자 교체, `qt.js` 삭제. **달력 일요일 시작 통일**. `formatDateKey`/`todayKey`는 `js/util/date.js` 재사용.
 - Phase 4(묵상): `reflection/*`. reflections UPDATE 정책의 QT 게이트 재검증, `reflection_reactions.profile_id` 인덱스 검토.
-- Phase 5: `rls_check.sql`에 prayers 케이스 추가(003 정책 생성 후), 003 직전 002 (2)단계 재실행, `app.js`·`_tmp_check.js`·`qt_schema.sql` 삭제, README 갱신, 카카오, 배포.
+- Phase 5: `rls_check.sql`에 prayers 케이스 추가(003 정책 생성 후), **배포 직후와 003 직전** 002 (2)단계 재실행(옛 프론트가 쓴 `profile_id` NULL 행 매핑), `app.js`·`_tmp_check.js`·`qt_schema.sql` 삭제, README 갱신, 카카오, 배포.
