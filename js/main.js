@@ -3,6 +3,10 @@ import { renderLoading, renderConnectionError, renderProfilePending } from './ui
 import { onAuthStateChange } from './auth/session.js';
 import { loadProfile, loadProfiles, renderMyPage } from './auth/profile.js';
 import { renderLoginPage } from './auth/loginPage.js';
+import { todayKey } from './util/date.js';
+import { loadMeetings, loadPrayers } from './prayer/api.js';
+import { defaultMeetingId } from './prayer/meeting.js';
+import { renderPrayerPage } from './prayer/page.js';
 
 // Phase 1 자리표시자. Phase 2(prayer)·3(qt)·Task 8(my)에서 실제 화면으로 교체한다.
 function placeholderPage(title) {
@@ -17,7 +21,7 @@ function placeholderPage(title) {
 }
 
 registerPage('qt', placeholderPage('QT'));
-registerPage('prayer', placeholderPage('기도제목'));
+registerPage('prayer', renderPrayerPage);
 registerPage('my', renderMyPage);
 
 // 로그인 직후 1회: 프로필 확인 → bootstrap(공용 데이터 로드) → 첫 화면
@@ -33,12 +37,17 @@ async function onSignedIn(session) {
       return;
     }
     appState.auth.profile = profile;
-    // bootstrap — Phase 2·3에서 meetings / prayers / qt_records 로드를 여기에 추가한다.
-    appState.prayer.profiles = await loadProfiles();
+    // bootstrap — 공용 데이터 1회 로드. Phase 3에서 qt_records를 추가한다.
+    const [profiles, meetings, prayers] = await Promise.all([loadProfiles(), loadMeetings(), loadPrayers()]);
+    appState.prayer.profiles = profiles;
+    appState.prayer.meetings = meetings;
+    appState.prayer.prayers = prayers;
+    appState.prayer.currentMeetingId = defaultMeetingId(meetings, todayKey());
     appState.view = 'qt';
     render();
   } catch (error) {
     console.error(error);
+    appState.auth.user = null; // 재진입 가드를 풀어 다음 SIGNED_IN에서 다시 시도할 수 있게 한다
     renderConnectionError(error.message || '알 수 없는 오류');
   }
 }
