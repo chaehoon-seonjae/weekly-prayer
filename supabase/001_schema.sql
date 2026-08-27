@@ -126,6 +126,10 @@ create policy profiles_select_all  on public.profiles for select to authenticate
 create policy profiles_update_self on public.profiles for update to authenticated
   using (auth_user_id = auth.uid()) with check (auth_user_id = auth.uid());
 
+-- 컬럼 단위 제한: 본인 행이라도 nickname / profile_image / updated_at 외 컬럼(legacy_member_id, display_order 등)은 수정 불가
+revoke update on public.profiles from authenticated;
+grant  update (nickname, profile_image, updated_at) on public.profiles to authenticated;
+
 -- qt_records: 완전 비공개
 drop policy if exists qt_records_select_self on public.qt_records;
 drop policy if exists qt_records_insert_self on public.qt_records;
