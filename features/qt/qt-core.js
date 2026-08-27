@@ -112,12 +112,12 @@
     },
 
     getQtPlantStage(total) {
-      if (total >= 200) return { name: '풍성한 나무', icon: '🌳', range: '200회 이상' };
-      if (total >= 100) return { name: '나무', icon: '🌿', range: '100 ~ 199회' };
-      if (total >= 50) return { name: '작은 나무', icon: '🌱', range: '50 ~ 99회' };
-      if (total >= 20) return { name: '어린 식물', icon: '🌿', range: '20 ~ 49회' };
+      if (total >= 200) return { name: '풍성한 나무', icon: '🌳✨', range: '200회 이상' };
+      if (total >= 100) return { name: '나무', icon: '🌳', range: '100 ~ 199회' };
+      if (total >= 50) return { name: '작은 나무', icon: '🌲', range: '50 ~ 99회' };
+      if (total >= 20) return { name: '어린 식물', icon: '🪴', range: '20 ~ 49회' };
       if (total >= 7) return { name: '새싹', icon: '🌱', range: '7 ~ 19회' };
-      return { name: '씨앗', icon: '🌱', range: '0 ~ 6회' };
+      return { name: '씨앗', icon: '🫘', range: '0 ~ 6회' };
     },
 
     getQtSummary(records) {
