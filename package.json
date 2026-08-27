@@ -1,0 +1,8 @@
+{
+  "name": "qt-and-prayer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
