@@ -4,6 +4,8 @@
 -- 결과는 임시 테이블에 모아 마지막 select 한 번으로 본다(SQL Editor는 마지막 문장 결과만 표시).
 -- 테스트 데이터는 날짜 2000-01-01로 넣고 끝에 정리한다. 실행 후 남는 데이터 없음.
 -- Phase 2 이후: prayers RLS(003) 활성화 뒤 "B가 A의 prayers UPDATE → 0행" 케이스를 추가한다.
+-- ⚠️ Supabase SQL Editor 전용. Editor는 스크립트 전체를 한 트랜잭션으로 실행하므로 중간 오류 시 전부 롤백된다.
+--    psql 등에서 BEGIN 없이 실행하면 중단 시 테스트 데이터(2000-01-01 행, prayed_count +1)가 남을 수 있다.
 
 create temp table if not exists rls_results (seq serial, case_name text, pass boolean);
 truncate rls_results;
@@ -46,6 +48,8 @@ begin
 exception
   when insufficient_privilege then
     insert into rls_results (case_name, pass) values ('QT 없이 묵상 INSERT 차단', true);
+  when others then
+    insert into rls_results (case_name, pass) values ('QT 없이 묵상 INSERT 차단 (예상 밖 오류: ' || sqlerrm || ')', false);
 end $$;
 
 -- B는 A 명의로 qt_records를 넣을 수 없다
@@ -58,6 +62,8 @@ begin
 exception
   when insufficient_privilege then
     insert into rls_results (case_name, pass) values ('타인 명의 qt_records INSERT 차단', true);
+  when others then
+    insert into rls_results (case_name, pass) values ('타인 명의 qt_records INSERT 차단 (예상 밖 오류: ' || sqlerrm || ')', false);
 end $$;
 
 -- B는 increment_prayed를 호출할 수 있다 (security definer). 끝에 되돌린다.
