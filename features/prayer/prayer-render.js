@@ -1,180 +1,14 @@
 (function () {
-  const MEMBERS = ['지영', '선재', '세희', '평화', '종호', '도희', '예송', '수람', '유찬'];
-  const SUPABASE_URL = 'https://jjubqeqqtvjvxlbnnuyt.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_vKXSP4T6JYQrZmSpdbf-zg_6msfRmgJ';
-  const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_KEY);
+  window.Prayer = window.Prayer || {};
 
-  function sortedWeeksAsc() {
-    return [...window.appState.weeks].sort((a, b) => a.week_date.localeCompare(b.week_date));
-  }
-
-  function mostRecentSundayISO(base = new Date()) {
-    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-    d.setDate(d.getDate() - d.getDay());
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  function isPastWeek() {
-    const meta = window.currentWeekMeta();
-    return meta && meta.week_date < mostRecentSundayISO();
-  }
-
-  function isFutureWeek() {
-    const meta = window.currentWeekMeta();
-    return meta && meta.week_date > mostRecentSundayISO();
-  }
-
-  function isLatestMeeting() {
-    const meta = window.currentWeekMeta();
-    if (!meta) return false;
-    const arr = sortedWeeksAsc();
-    return meta.id === arr[arr.length - 1]?.id;
-  }
-
-  function fmtDate(d) {
-    const [y, m, day] = d.split('-');
-    return `${y}.${m}.${day}`;
-  }
-
-  function shortDate(d) {
-    const [, m, day] = d.split('-');
-    return `${m}/${day}`;
-  }
-
-  function adjacentMeeting(direction) {
-    const arr = sortedWeeksAsc();
-    const idx = arr.findIndex(w => w.id === window.appState.currentWeek);
-    return arr[idx + direction] || null;
-  }
-
-  function defaultMeetingId() {
-    const sunday = mostRecentSundayISO();
-    const candidates = [...window.appState.weeks].filter(w => w.week_date <= sunday).sort((a, b) => b.week_date.localeCompare(a.week_date));
-    return (candidates[0] || [...window.appState.weeks].sort((a, b) => b.week_date.localeCompare(a.week_date))[0])?.id;
-  }
-
-  function isCurrentMeeting() {
-    return window.appState.currentWeek === defaultMeetingId();
-  }
-
-  function renderPrayerView() {
-    const meta = window.currentWeekMeta();
-    const entries = window.currentEntries();
-    const names = Object.keys(entries);
-    const total = MEMBERS.length;
-    const done = names.length;
-    const allDone = done === total;
-    const unwritten = MEMBERS.filter(m => !entries[m]);
-
-    let dotsHtml = '';
-    for (let i = 0; i < total; i += 1) {
-      dotsHtml += `<span class="dot ${i < done ? 'filled' : ''}"></span>`;
-    }
-
-    const headerHtml = `
-      <div class="week-header">
-        <div class="eyebrow">${isLatestMeeting() ? '마지막 순모임' : isFutureWeek() ? '다음 순모임' : isPastWeek() ? '지난 순모임' : '이번 주 순모임'}</div>
-        <h1 class="mono">${meta.week_number}번째 순모임</h1>
-        <div class="date mono">${fmtDate(meta.week_date)}</div>
-        <div class="progress-row">
-          <div class="dots">${dotsHtml}</div>
-          <div class="progress-text mono">${done} / ${total} 작성 완료</div>
-        </div>
-        ${allDone ? '<div class="complete-banner">☀️ 이번 주 기도제목이 모두 모였어요</div>' : ''}
-      </div>
-    `;
-
-    const prev = adjacentMeeting(-1);
-    const next = adjacentMeeting(1);
-    const stripHtml = `
-      <div class="meeting-nav">
-        <div class="nav-side ${prev ? '' : 'disabled'}" id="prevMeeting" data-direction="-1">
-          <span class="nav-arrow">‹</span>
-          <span class="nav-date">${prev ? shortDate(prev.week_date) : ''}</span>
-        </div>
-        <div class="nav-center">
-          <div class="label">${isCurrentMeeting() ? '이번 순모임' : isLatestMeeting() ? '마지막 순모임' : isFutureWeek() ? '다음 순모임' : '지난 순모임'}</div>
-          <div class="date">${shortDate(meta.week_date)}</div>
-          <div class="line"></div>
-        </div>
-        <div class="nav-side next ${next ? '' : 'disabled'}" id="nextMeeting" data-direction="1">
-          <span class="nav-date">${next ? shortDate(next.week_date) : ''}</span>
-          <span class="nav-arrow">›</span>
-        </div>
-      </div>
-    `;
-
-    let ctaHtml = '';
-    if (!isPastWeek()) {
-      ctaHtml = allDone
-        ? '<button class="cta-btn" disabled>✓ 이번 주 기도제목 작성 완료</button>'
-        : '<button class="cta-btn" id="btnWrite">＋ 이번 주 기도제목 나누기</button>';
-      if (!allDone && unwritten.length > 0) {
-        ctaHtml += `<div class="nudge">아직 <b>${unwritten.length}명</b>이 기도제목을 준비 중이에요. 천천히 나눠주셔도 괜찮아요 🌤️</div>`;
-      }
-    }
-
-    let cardsHtml = '';
-    if (done === 0) {
-      cardsHtml = `
-        <div class="empty-card">
-          <div class="sun-icon">🌤️</div>
-          <div>아직 아무도 기도제목을 나누지 않았어요.<br/>가장 먼저 나눠보는 건 어떨까요?</div>
-        </div>`;
-    } else {
-      cardsHtml = '<div class="cards">' + names.map(name => {
-        const e = entries[name];
-        const collapsed = window.appState.collapsedCards[name] !== false && e.items.length > 3;
-        const hasPrayedBefore = !!localStorage.getItem(`prayed:${window.appState.currentWeek}:${name}`);
-        return `
-          <div class="card ${collapsed ? 'collapsed' : ''}" data-name="${name}">
-            <div class="card-top">
-              <div class="card-name">${name}</div>
-              ${!isPastWeek() ? `<button class="kebab" data-edit="${name}">⋯</button>` : ''}
-            </div>
-            <div class="item-list">
-              ${e.items.map((it, i) => `
-                <div class="item">
-                  <div class="item-title" data-idx="${i + 1}">${window.escapeHtml(it.title)}</div>
-                  ${window.getDetailLines(it).map(detail => `<div class="item-detail">${window.escapeHtml(detail)}</div>`).join('')}
-                </div>
-              `).join('')}
-            </div>
-            ${e.items.length > 3 ? `<span class="more-toggle" data-toggle="${name}">${collapsed ? '더보기' : '접기'}</span>` : ''}
-            <div class="card-bottom">
-              <button class="pray-btn ${hasPrayedBefore ? 'done' : ''}" data-pray="${name}">
-                <span class="glow"></span>
-                🙏 ${hasPrayedBefore ? '함께 기도했어요' : '기도했어요'} <span class="count mono">· ${e.prayed}</span>
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('') + '</div>';
-    }
-
-    const copyBarHtml = !isPastWeek() ? `
-      <div class="copy-bar">
-        <div class="copy-bar-inner">
-          <button class="copy-btn ${allDone ? 'ready' : ''}" id="btnCopyAll">
-            ${allDone ? '전체 기도제목 복사' : `지금까지 작성된 ${done}명 기도제목 복사`}
-          </button>
-        </div>
-      </div>
-    ` : '';
-
-    document.getElementById('app').innerHTML = headerHtml + stripHtml + (USE_SUPABASE ? '' : '<div class="nudge"><b>데모 모드</b> · Supabase URL과 Publishable key를 넣으면 공용 DB 모드로 전환됩니다.</div>') + ctaHtml + cardsHtml + copyBarHtml + window.renderBottomNav();
-    window.bindGlobalNavigation();
-    bindHomeEvents();
-  }
+  const Core = window.Prayer.Core;
+  const USE_SUPABASE = Boolean(window.__supabaseClient || window.supabase);
 
   function buildCompiledText() {
     const meta = window.currentWeekMeta();
     const entries = window.currentEntries();
-    let out = `♥ 우리 순 기도제목 ♥\n${fmtDate(meta.week_date)} ${meta.week_number}번째 순모임\n`;
-    MEMBERS.forEach(name => {
+    let out = `♥ 우리 순 기도제목 ♥\n${Core.fmtDate(meta.week_date)} ${meta.week_number}번째 순모임\n`;
+    Core.MEMBERS.forEach(name => {
       if (!entries[name]) return;
       out += `\n♥${name}\n`;
       entries[name].items.forEach((it, i) => {
@@ -185,26 +19,27 @@
     return out;
   }
 
-  function openPreviewSheet() {
-    const text = buildCompiledText();
-    const html = `
-      <div class="sheet-title">전체 기도제목 미리보기</div>
-      <div class="sheet-sub">카카오톡에 그대로 붙여넣을 수 있어요</div>
-      <div class="preview-box">${window.escapeHtml(text)}</div>
-      <button class="save-btn" id="btnDoCopy" style="margin-top:16px;">전체 기도제목 복사</button>
-    `;
-    const sheet = openSheet(html);
-    sheet.querySelector('#btnDoCopy').onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch (e) {
-        const ta = document.createElement('textarea');
-        ta.value = text; document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); ta.remove();
-      }
-      closeSheet();
-      window.showToast('✓ 기도제목을 복사했어요');
-    };
+  function openSheet(html) {
+    const overlay = document.getElementById('overlay');
+    const sheet = document.createElement('div');
+    sheet.className = 'sheet';
+    sheet.id = 'activeSheet';
+    sheet.innerHTML = '<div class="sheet-handle"></div>' + html;
+    document.body.appendChild(sheet);
+    overlay.classList.add('show');
+    requestAnimationFrame(() => sheet.classList.add('show'));
+    overlay.onclick = closeSheet;
+    return sheet;
+  }
+
+  function closeSheet() {
+    const overlay = document.getElementById('overlay');
+    const sheet = document.getElementById('activeSheet');
+    overlay.classList.remove('show');
+    if (sheet) {
+      sheet.classList.remove('show');
+      setTimeout(() => sheet.remove(), 250);
+    }
   }
 
   function openDeleteConfirm(name) {
@@ -221,7 +56,7 @@
     sheet.querySelector('#btnCancel').onclick = closeSheet;
     sheet.querySelector('#btnConfirmDelete').onclick = async () => {
       const entry = window.appState.entries[window.appState.currentWeek][name];
-      if (USE_SUPABASE && window.__db && entry?.id) {
+      if (window.__db && entry?.id) {
         const { error } = await window.__db.from('prayers').delete().eq('id', entry.id);
         if (error) {
           console.error(error);
@@ -332,13 +167,19 @@
       const prevPrayed = (prev && prev.prayed) || 0;
       let savedEntry = { items: cleaned, prayed: prevPrayed };
 
-      if (USE_SUPABASE && window.__db) {
+      if (window.__db) {
         const member = (window.__members || []).find(m => m.name === name);
         if (!member) {
           window.showToast('순원 정보를 찾을 수 없어요');
           return;
         }
-        const payload = { meeting_id: Number(window.appState.currentWeek), member_id: member.id, items: cleaned, prayed_count: prevPrayed, updated_at: new Date().toISOString() };
+        const payload = {
+          meeting_id: Number(window.appState.currentWeek),
+          member_id: member.id,
+          items: cleaned,
+          prayed_count: prevPrayed,
+          updated_at: new Date().toISOString()
+        };
         const { data, error } = await window.__db.from('prayers').upsert(payload, { onConflict: 'meeting_id,member_id' }).select().single();
         if (error) {
           console.error(error);
@@ -371,7 +212,7 @@
       <div class="sheet-title">누구의 기도제목을 나눌까요?</div>
       <div class="sheet-sub">이름을 선택해주세요</div>
       <div class="member-grid">
-        ${MEMBERS.map(m => {
+        ${Core.MEMBERS.map(m => {
           const done = !!entries[m];
           return `<div class="member-chip ${done ? 'done' : ''}" data-member="${m}">${m}${done ? '<span class="check">✓ 작성 완료</span>' : ''}</div>`;
         }).join('')}
@@ -386,27 +227,139 @@
     });
   }
 
-  function openSheet(html) {
-    const overlay = document.getElementById('overlay');
-    const sheet = document.createElement('div');
-    sheet.className = 'sheet';
-    sheet.id = 'activeSheet';
-    sheet.innerHTML = '<div class="sheet-handle"></div>' + html;
-    document.body.appendChild(sheet);
-    overlay.classList.add('show');
-    requestAnimationFrame(() => sheet.classList.add('show'));
-    overlay.onclick = closeSheet;
-    return sheet;
+  function openPreviewSheet() {
+    const text = buildCompiledText();
+    const html = `
+      <div class="sheet-title">전체 기도제목 미리보기</div>
+      <div class="sheet-sub">카카오톡에 그대로 붙여넣을 수 있어요</div>
+      <div class="preview-box">${window.escapeHtml(text)}</div>
+      <button class="save-btn" id="btnDoCopy" style="margin-top:16px;">전체 기도제목 복사</button>
+    `;
+    const sheet = openSheet(html);
+    sheet.querySelector('#btnDoCopy').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      closeSheet();
+      window.showToast('✓ 기도제목을 복사했어요');
+    };
   }
 
-  function closeSheet() {
-    const overlay = document.getElementById('overlay');
-    const sheet = document.getElementById('activeSheet');
-    overlay.classList.remove('show');
-    if (sheet) {
-      sheet.classList.remove('show');
-      setTimeout(() => sheet.remove(), 250);
+  function renderPrayerView() {
+    const meta = window.currentWeekMeta();
+    const entries = window.currentEntries();
+    const names = Object.keys(entries);
+    const total = Core.MEMBERS.length;
+    const done = names.length;
+    const allDone = done === total;
+    const unwritten = Core.MEMBERS.filter(m => !entries[m]);
+
+    let dotsHtml = '';
+    for (let i = 0; i < total; i += 1) {
+      dotsHtml += `<span class="dot ${i < done ? 'filled' : ''}"></span>`;
     }
+
+    const headerHtml = `
+      <div class="week-header">
+        <div class="eyebrow">${Core.isLatestMeeting() ? '마지막 순모임' : Core.isFutureWeek() ? '다음 순모임' : Core.isPastWeek() ? '지난 순모임' : '이번 주 순모임'}</div>
+        <h1 class="mono">${meta.week_number}번째 순모임</h1>
+        <div class="date mono">${Core.fmtDate(meta.week_date)}</div>
+        <div class="progress-row">
+          <div class="dots">${dotsHtml}</div>
+          <div class="progress-text mono">${done} / ${total} 작성 완료</div>
+        </div>
+        ${allDone ? '<div class="complete-banner">☀️ 이번 주 기도제목이 모두 모였어요</div>' : ''}
+      </div>
+    `;
+
+    const prev = Core.adjacentMeeting(-1);
+    const next = Core.adjacentMeeting(1);
+    const stripHtml = `
+      <div class="meeting-nav">
+        <div class="nav-side ${prev ? '' : 'disabled'}" id="prevMeeting" data-direction="-1">
+          <span class="nav-arrow">‹</span>
+          <span class="nav-date">${prev ? Core.shortDate(prev.week_date) : ''}</span>
+        </div>
+        <div class="nav-center">
+          <div class="label">${Core.isCurrentMeeting() ? '이번 순모임' : Core.isLatestMeeting() ? '마지막 순모임' : Core.isFutureWeek() ? '다음 순모임' : '지난 순모임'}</div>
+          <div class="date">${Core.shortDate(meta.week_date)}</div>
+          <div class="line"></div>
+        </div>
+        <div class="nav-side next ${next ? '' : 'disabled'}" id="nextMeeting" data-direction="1">
+          <span class="nav-date">${next ? Core.shortDate(next.week_date) : ''}</span>
+          <span class="nav-arrow">›</span>
+        </div>
+      </div>
+    `;
+
+    let ctaHtml = '';
+    if (!Core.isPastWeek()) {
+      ctaHtml = allDone
+        ? '<button class="cta-btn" disabled>✓ 이번 주 기도제목 작성 완료</button>'
+        : '<button class="cta-btn" id="btnWrite">＋ 이번 주 기도제목 나누기</button>';
+      if (!allDone && unwritten.length > 0) {
+        ctaHtml += `<div class="nudge">아직 <b>${unwritten.length}명</b>이 기도제목을 준비 중이에요. 천천히 나눠주셔도 괜찮아요 🌤️</div>`;
+      }
+    }
+
+    let cardsHtml = '';
+    if (done === 0) {
+      cardsHtml = `
+        <div class="empty-card">
+          <div class="sun-icon">🌤️</div>
+          <div>아직 아무도 기도제목을 나누지 않았어요.<br/>가장 먼저 나눠보는 건 어떨까요?</div>
+        </div>`;
+    } else {
+      cardsHtml = '<div class="cards">' + names.map(name => {
+        const e = entries[name];
+        const collapsed = window.appState.collapsedCards[name] !== false && e.items.length > 3;
+        const hasPrayedBefore = !!localStorage.getItem(`prayed:${window.appState.currentWeek}:${name}`);
+        return `
+          <div class="card ${collapsed ? 'collapsed' : ''}" data-name="${name}">
+            <div class="card-top">
+              <div class="card-name">${name}</div>
+              ${!Core.isPastWeek() ? `<button class="kebab" data-edit="${name}">⋯</button>` : ''}
+            </div>
+            <div class="item-list">
+              ${e.items.map((it, i) => `
+                <div class="item">
+                  <div class="item-title" data-idx="${i + 1}">${window.escapeHtml(it.title)}</div>
+                  ${window.getDetailLines(it).map(detail => `<div class="item-detail">${window.escapeHtml(detail)}</div>`).join('')}
+                </div>
+              `).join('')}
+            </div>
+            ${e.items.length > 3 ? `<span class="more-toggle" data-toggle="${name}">${collapsed ? '더보기' : '접기'}</span>` : ''}
+            <div class="card-bottom">
+              <button class="pray-btn ${hasPrayedBefore ? 'done' : ''}" data-pray="${name}">
+                <span class="glow"></span>
+                🙏 ${hasPrayedBefore ? '함께 기도했어요' : '기도했어요'} <span class="count mono">· ${e.prayed}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('') + '</div>';
+    }
+
+    const copyBarHtml = !Core.isPastWeek() ? `
+      <div class="copy-bar">
+        <div class="copy-bar-inner">
+          <button class="copy-btn ${allDone ? 'ready' : ''}" id="btnCopyAll">
+            ${allDone ? '전체 기도제목 복사' : `지금까지 작성된 ${done}명 기도제목 복사`}
+          </button>
+        </div>
+      </div>
+    ` : '';
+
+    document.getElementById('app').innerHTML = headerHtml + stripHtml + (USE_SUPABASE ? '' : '<div class="nudge"><b>데모 모드</b> · Supabase URL과 Publishable key를 넣으면 공용 DB 모드로 전환됩니다.</div>') + ctaHtml + cardsHtml + copyBarHtml + window.renderBottomNav();
+    window.bindGlobalNavigation();
+    bindHomeEvents();
   }
 
   function bindHomeEvents() {
@@ -414,7 +367,7 @@
       if (el.classList.contains('disabled')) return;
       const direction = Number(el.dataset.direction);
       el.onclick = () => {
-        const nextWeek = adjacentMeeting(direction);
+        const nextWeek = Core.adjacentMeeting(direction);
         if (nextWeek) {
           window.appState.currentWeek = nextWeek.id;
           window.render();
@@ -438,7 +391,7 @@
         const name = el.dataset.pray;
         const entry = window.appState.entries[window.appState.currentWeek][name];
         const nextCount = (entry.prayed || 0) + 1;
-        if (USE_SUPABASE && window.__db && entry.id) {
+        if (window.__db && entry.id) {
           const { error } = await window.__db.from('prayers').update({ prayed_count: nextCount }).eq('id', entry.id);
           if (error) {
             console.error(error);
@@ -457,12 +410,24 @@
     });
 
     document.querySelectorAll('[data-edit]').forEach(el => {
-      el.onclick = () => openWriteSheet(el.dataset.edit, true);
+      el.onclick = () => renderWriteSheet(el.dataset.edit, true);
     });
 
     const btnCopy = document.getElementById('btnCopyAll');
     if (btnCopy) btnCopy.onclick = () => openPreviewSheet();
   }
+
+  window.Prayer.Render = {
+    buildCompiledText,
+    openSheet,
+    closeSheet,
+    openDeleteConfirm,
+    renderWriteSheet,
+    openMemberSheet,
+    openPreviewSheet,
+    renderPrayerView,
+    bindHomeEvents
+  };
 
   window.renderPrayerView = renderPrayerView;
   window.bindHomeEvents = bindHomeEvents;

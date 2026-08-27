@@ -97,17 +97,25 @@ QT를 하지 않은 날이 있어도 이전 단계로 돌아가지 않습니다.
 ```text
 /
 ├── index.html
-├── css/
-├── js/
-│   ├── auth/
+├── app.js
+├── style.css
+├── features/
 │   ├── qt/
+│   │   ├── qt-core.js
+│   │   ├── qt-data.js
+│   │   ├── qt-render.js
+│   │   └── qt.js
 │   └── prayer/
-├── assets/
-│   └── plants/
-└── README.md
+│       ├── prayer-core.js
+│       ├── prayer-render.js
+│       └── prayer.js
+├── supabase/
+│   └── qt_schema.sql
+├── README.md
+└── .gitignore
 ```
 
-> 실제 프로젝트 구조에 맞게 업데이트합니다.
+> 기능별 모듈이 features/qt, features/prayer 아래에서 관리되도록 정리했습니다.
 
 ---
 
