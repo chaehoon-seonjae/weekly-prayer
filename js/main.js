@@ -1,7 +1,7 @@
 import { appState, resetState, registerPage, render, renderShell } from './state.js';
 import { renderLoading, renderConnectionError, renderProfilePending } from './ui/screens.js';
 import { onAuthStateChange } from './auth/session.js';
-import { loadProfile, loadProfiles } from './auth/profile.js';
+import { loadProfile, loadProfiles, renderMyPage } from './auth/profile.js';
 import { renderLoginPage } from './auth/loginPage.js';
 
 // Phase 1 자리표시자. Phase 2(prayer)·3(qt)·Task 8(my)에서 실제 화면으로 교체한다.
@@ -18,7 +18,7 @@ function placeholderPage(title) {
 
 registerPage('qt', placeholderPage('QT'));
 registerPage('prayer', placeholderPage('기도제목'));
-registerPage('my', placeholderPage('MY'));
+registerPage('my', renderMyPage);
 
 // 로그인 직후 1회: 프로필 확인 → bootstrap(공용 데이터 로드) → 첫 화면
 async function onSignedIn(session) {
