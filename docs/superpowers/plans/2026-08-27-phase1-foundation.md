@@ -28,7 +28,7 @@
 
 | 파일 | 책임 |
 |---|---|
-| `package.json` (생성) | `"type":"module"`, `npm test` → `node --test tests/`. 의존성 없음 |
+| `package.json` (생성) | `"type":"module"`, `npm test` → `node --test 'tests/**/*.test.js'`(Node 22.19에서 디렉터리 인자 `tests/`는 MODULE_NOT_FOUND). 의존성 없음 |
 | `tests/dom.test.js`, `tests/auth-errors.test.js` (생성) | 순수 함수 테스트 |
 | `supabase/001_schema.sql` (생성) | 신규 테이블·함수·트리거·RLS |
 | `supabase/002_migrate.sql` (생성) | members→profiles, prayers.profile_id 채움, auth.users 백필, 연결 스니펫 |
@@ -86,7 +86,7 @@ Expected: `feat/account-based`
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/"
+    "test": "node --test 'tests/**/*.test.js'"
   }
 }
 ```

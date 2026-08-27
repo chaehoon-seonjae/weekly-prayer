@@ -149,7 +149,7 @@ onSignedIn():
 │   ├── 003_cutover.sql        # 제약 강화, member_id/members DROP, prayers·meetings RLS
 │   └── rls_check.sql          # RLS 부정 케이스 검증
 ├── tests/                     # node --test
-├── package.json               # {"type":"module","scripts":{"test":"node --test tests/"}} — 의존성 없음
+├── package.json               # {"type":"module","scripts":{"test":"node --test 'tests/**/*.test.js'"}} — 의존성 없음
 └── js/
     ├── main.js                # 진입점 (3장 시퀀스)
     ├── supabase.js            # window.supabase.createClient 1회 → export client
@@ -282,7 +282,7 @@ select meeting_id, profile_id, count(*) from prayers
 
 | 층 | 방법 | 대상 |
 |---|---|---|
-| 순수 함수 | `node --test tests/` (Node 22+, 의존성 0) | `streak.js`(빈 배열·오늘 미완료·연속 끊김), `growth.js`(0/6/7/19/20/49/50/99/100/199/200 경계값), `calendar.js`(42칸·월 시작 요일), `meeting.js`(정렬·인접·이번 주 판정) |
+| 순수 함수 | `node --test 'tests/**/*.test.js'` (Node 22+, 의존성 0) | `streak.js`(빈 배열·오늘 미완료·연속 끊김), `growth.js`(0/6/7/19/20/49/50/99/100/199/200 경계값), `calendar.js`(42칸·월 시작 요일), `meeting.js`(정렬·인접·이번 주 판정) |
 | RLS | `supabase/rls_check.sql` — `set local role authenticated; set local request.jwt.claims = '{"sub":"<uuid>"}'`로 사용자 A·B를 흉내내어 부정 케이스를 assert | B가 A의 `qt_records` SELECT → 0행 / B가 A의 `prayers` UPDATE → 0행 영향 / A가 `qt_records` 없는 날짜에 `reflections` INSERT → 정책 위반 / anon이 아무 테이블 SELECT → 거부 / B가 `increment_prayed(A의 prayer)` → 성공 |
 | E2E | 수동 체크리스트, 계정 2개 · 브라우저 2개 | 각 Phase 완료 기준 |
 
