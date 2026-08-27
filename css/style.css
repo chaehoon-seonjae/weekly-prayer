@@ -26,7 +26,7 @@ body {
   -webkit-font-smoothing:antialiased;
 }
 .mono { font-family:'Pretendard', sans-serif; }
-#app { max-width:480px; margin:0 auto; padding:0 20px 120px; position:relative; }
+#app { max-width:480px; margin:0 auto; padding:0 20px 170px; position:relative; }
 
 .qt-shell { display:flex; flex-direction:column; gap:18px; padding-top:18px; }
 .qt-header { background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(240,248,255,.92)); border-radius:22px; border:1px solid rgba(111,157,211,0.18); box-shadow:var(--shadow); padding:16px 18px 14px; }
@@ -141,7 +141,7 @@ body {
 @media (prefers-reduced-motion: reduce) { .glow.play { animation:none; } }
 .empty-card { background:#fff; border-radius:var(--radius-card); padding:36px 20px; text-align:center; color:var(--slate); border:1px dashed #D9E7F5; margin-top:20px; }
 .empty-card .sun-icon { font-size:26px; margin-bottom:8px; }
-.copy-bar { position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; justify-content:center; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, transparent, #FBFDFF 30%); }
+.copy-bar { position:fixed; left:0; right:0; bottom:calc(72px + env(safe-area-inset-bottom)); z-index:30; display:flex; justify-content:center; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, transparent, #FBFDFF 30%); }
 .copy-bar-inner { width:100%; max-width:440px; }
 .copy-btn { width:100%; padding:15px; border:none; border-radius:var(--radius-btn); background:var(--navy); color:#fff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 10px 24px -10px rgba(34,48,71,0.5); }
 .copy-btn.ready { background:linear-gradient(135deg, var(--sky-deep), var(--navy)); }
