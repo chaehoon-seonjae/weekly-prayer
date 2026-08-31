@@ -1,4 +1,4 @@
-import { appState, resetState, registerPage, render, renderShell } from './state.js';
+import { appState, resetState, registerPage, render } from './state.js';
 import { renderLoading, renderConnectionError, renderProfilePending } from './ui/screens.js';
 import { onAuthStateChange } from './auth/session.js';
 import { loadProfile, loadProfiles, renderMyPage } from './auth/profile.js';
@@ -7,20 +7,11 @@ import { todayKey } from './util/date.js';
 import { loadMeetings, loadPrayers } from './prayer/api.js';
 import { defaultMeetingId } from './prayer/meeting.js';
 import { renderPrayerPage } from './prayer/page.js';
+import { renderQtView } from './qt/page.js';
+import { loadMyQtRecords } from './qt/api.js';
+import { loadMyReflections } from './reflection/api.js';
 
-// Phase 1 자리표시자. Phase 2(prayer)·3(qt)·Task 8(my)에서 실제 화면으로 교체한다.
-function placeholderPage(title) {
-  return () => renderShell(`
-    <div class="qt-shell">
-      <div class="qt-card">
-        <div class="qt-card-title">${title}</div>
-        <div class="qt-side-note">준비 중이에요.</div>
-      </div>
-    </div>
-  `);
-}
-
-registerPage('qt', placeholderPage('QT'));
+registerPage('qt', renderQtView);
 registerPage('prayer', renderPrayerPage);
 registerPage('my', renderMyPage);
 
@@ -33,16 +24,21 @@ async function onSignedIn(session) {
   try {
     const profile = await loadProfile(session.user.id);
     if (!profile) {
+      appState.auth.user = null; // 재진입 가드를 풀어 다음 SIGNED_IN에서 다시 시도할 수 있게 한다
       renderProfilePending();
       return;
     }
     appState.auth.profile = profile;
-    // bootstrap — 공용 데이터 1회 로드. Phase 3에서 qt_records를 추가한다.
-    const [profiles, meetings, prayers] = await Promise.all([loadProfiles(), loadMeetings(), loadPrayers()]);
+    // bootstrap — 공용 데이터 1회 로드
+    const [profiles, meetings, prayers, qtRecords, myReflections] = await Promise.all([
+      loadProfiles(), loadMeetings(), loadPrayers(), loadMyQtRecords(), loadMyReflections(profile.id),
+    ]);
     appState.prayer.profiles = profiles;
     appState.prayer.meetings = meetings;
     appState.prayer.prayers = prayers;
     appState.prayer.currentMeetingId = defaultMeetingId(meetings, todayKey());
+    appState.qt.records = qtRecords;
+    appState.qt.myReflections = myReflections;
     appState.view = 'qt';
     render();
   } catch (error) {

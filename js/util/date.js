@@ -9,3 +9,8 @@ export function formatDateKey(date) {
 export function todayKey() {
   return formatDateKey(new Date());
 }
+
+export function parseDateKey(dateKey) {
+  const [y, m, d] = String(dateKey).split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}

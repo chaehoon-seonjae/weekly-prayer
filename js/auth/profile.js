@@ -77,6 +77,8 @@ function bindMyEvents() {
       }
       try {
         appState.auth.profile = await updateNickname(appState.auth.profile.id, nickname);
+        const profileIdx = appState.prayer.profiles.findIndex(p => p.id === appState.auth.profile.id);
+        if (profileIdx >= 0) appState.prayer.profiles[profileIdx] = appState.auth.profile;
         renderMyPage();
         showToast('닉네임이 수정되었어요.');
       } catch (error) {

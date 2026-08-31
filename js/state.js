@@ -6,7 +6,7 @@ function initialState() {
     view: 'qt',                 // 'qt' | 'prayer' | 'my'
     qtTab: 'my',                // 'my' | 'feed'
     auth: { user: null, profile: null },
-    qt: { records: [], month: new Date() },
+    qt: { records: [], myReflections: [], month: new Date(), calendar: { revealed: null, open: null } },
     feed: { items: [] },
     prayer: { meetings: [], prayers: [], profiles: [], currentMeetingId: null, collapsed: {} },
   };
