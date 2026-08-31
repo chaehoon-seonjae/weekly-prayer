@@ -716,167 +716,169 @@
    * 식물 성장 상세 Bottom Sheet
    */
   async function openQtGrowthSheet() {
-  const records = await Data.getQtRecords();
-  const summary = Core.getQtSummary(records);
+    const records = await Data.getQtRecords();
+    const summary = Core.getQtSummary(records);
 
-  const total = summary.total;
-  const stage = Core.getQtPlantStage(total);
-  const progress = Core.getQtProgress(total);
+    const total = summary.total;
+    const stage = Core.getQtPlantStage(total);
+    const progress = Core.getQtProgress(total);
 
-  // 다음 단계 이름
-  const plantStages = [
-  {
-    name: '씨앗',
-    image: './assets/plants/seed.png',
-    min: 0
-  },
-  {
-    name: '새싹',
-    image: './assets/plants/sprout.png',
-    min: 7
-  },
-  {
-    name: '어린 식물',
-    image: './assets/plants/young-plant.png',
-    min: 20
-  },
-  {
-    name: '작은 나무',
-    image: './assets/plants/small-tree.png',
-    min: 50
-  },
-  {
-    name: '나무',
-    image: './assets/plants/tree.png',
-    min: 100
-  },
-  {
-    name: '풍성한 나무',
-    image: './assets/plants/full-tree.png',
-    min: 200
-  }
-];
+    // 다음 단계 이름
+    const plantStages = [
+    {
+      name: '씨앗',
+      image: './assets/plants/seed.png',
+      min: 0
+    },
+    {
+      name: '새싹',
+      image: './assets/plants/sprout.png',
+      min: 7
+    },
+    {
+      name: '어린 식물',
+      image: './assets/plants/young-plant.png',
+      min: 20
+    },
+    {
+      name: '작은 나무',
+      image: './assets/plants/small-tree.png',
+      min: 50
+    },
+    {
+      name: '나무',
+      image: './assets/plants/tree.png',
+      min: 100
+    },
+    {
+      name: '풍성한 나무',
+      image: './assets/plants/full-tree.png',
+      min: 200
+    }
+  ];
 
-  const currentStageIndex = plantStages.findIndex(
-    item => item.name === stage.name
-  );
+    const currentStageIndex = plantStages.findIndex(
+      item => item.name === stage.name
+    );
 
-  const nextStage =
-    currentStageIndex >= 0 &&
-    currentStageIndex < plantStages.length - 1
-      ? plantStages[currentStageIndex + 1]
-      : null;
+    const currentStage = plantStages[currentStageIndex];
 
-  const progressPercent = nextStage
-    ? Math.min(
-        100,
-        Math.max(
-          0,
-          ((total - plantStages[currentStageIndex].min) /
-            (nextStage.min - plantStages[currentStageIndex].min)) *
-            100
+    const nextStage =
+      currentStageIndex >= 0 &&
+      currentStageIndex < plantStages.length - 1
+        ? plantStages[currentStageIndex + 1]
+        : null;
+
+    const progressPercent = nextStage
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            ((total - plantStages[currentStageIndex].min) /
+              (nextStage.min - plantStages[currentStageIndex].min)) *
+              100
+          )
         )
-      )
-    : 100;
+      : 100;
 
-  const html = `
-    <div class="growth-sheet">
+    const html = `
+      <div class="growth-sheet">
 
 
-      <!-- 식물 Hero -->
-      <div class="growth-hero">
+        <!-- 식물 Hero -->
+        <div class="growth-hero">
 
-        <div class="growth-sun"></div>
+          <div class="growth-sun"></div>
 
-        <div class="growth-sparkle sparkle-1">✦</div>
-        <div class="growth-sparkle sparkle-2">✦</div>
+          <div class="growth-sparkle sparkle-1">✦</div>
+          <div class="growth-sparkle sparkle-2">✦</div>
 
-        <div class="growth-plant">
-          <img
-            src="${stage.image}"
-            alt="${stage.name}"
-            class="growth-plant-image"
-          >
-        </div>>
+          <div class="growth-plant">
+            <img
+              src="${currentStage.image}"
+              alt="${currentStage.name}"
+              class="growth-plant-image"
+            >
+          </div>
 
-        <h2 class="growth-title">
-          ${stage.name}
-        </h2>
+          <h2 class="growth-title">
+            ${stage.name}
+          </h2>
 
-        <p class="growth-description">
-          말씀과 함께 자라고 있어요
-        </p>
+          <p class="growth-description">
+            말씀과 함께 자라고 있어요
+          </p>
 
-      </div>
-
-      ${
-        nextStage
-          ? `
-            <!-- 성장 Progress -->
-            <div class="growth-progress-section">
-
-              <div class="growth-next-title">
-                ${stage.name}에서
-                <strong>${nextStage.name}</strong>으로 🌿
-              </div>
-
-              <div class="growth-progress-track">
-                <div
-                  class="growth-progress-fill"
-                  style="width:${progressPercent}%"
-                ></div>
-              </div>
-
-              <div class="growth-progress-meta">
-                <span>${total}번 함께했어요</span>
-                <strong>
-                  다음 성장까지 ${progress.remaining || 0}번
-                </strong>
-              </div>
-
-            </div>
-          `
-          : `
-            <div class="growth-complete">
-              🌳 풍성하게 자라고 있어요
-            </div>
-          `
-      }
-
-      <!-- 기록 카드 -->
-      <div class="growth-stats">
-
-        <div class="growth-stat">
-          <div class="growth-stat-icon">🔥</div>
-          <strong>${summary.currentStreak}일</strong>
-          <span>현재 연속</span>
         </div>
 
-        <div class="growth-stat main">
-          <div class="growth-stat-icon">☀️</div>
-          <strong>${total}일</strong>
-          <span>함께한 날</span>
+        ${
+          nextStage
+            ? `
+              <!-- 성장 Progress -->
+              <div class="growth-progress-section">
+
+                <div class="growth-next-title">
+                  ${stage.name}에서
+                  <strong>${nextStage.name}</strong>으로 🌿
+                </div>
+
+                <div class="growth-progress-track">
+                  <div
+                    class="growth-progress-fill"
+                    style="width:${progressPercent}%"
+                  ></div>
+                </div>
+
+                <div class="growth-progress-meta">
+                  <span>${total}번 함께했어요</span>
+                  <strong>
+                    다음 성장까지 ${progress.remaining || 0}번
+                  </strong>
+                </div>
+
+              </div>
+            `
+            : `
+              <div class="growth-complete">
+                🌳 풍성하게 자라고 있어요
+              </div>
+            `
+        }
+
+        <!-- 기록 카드 -->
+        <div class="growth-stats">
+
+          <div class="growth-stat">
+            <div class="growth-stat-icon">🔥</div>
+            <strong>${summary.currentStreak}일</strong>
+            <span>현재 연속</span>
+          </div>
+
+          <div class="growth-stat main">
+            <div class="growth-stat-icon">☀️</div>
+            <strong>${total}일</strong>
+            <span>함께한 날</span>
+          </div>
+
+          <div class="growth-stat">
+            <div class="growth-stat-icon">🏅</div>
+            <strong>${summary.longestStreak}일</strong>
+            <span>최장 연속</span>
+          </div>
+
         </div>
 
-        <div class="growth-stat">
-          <div class="growth-stat-icon">🏅</div>
-          <strong>${summary.longestStreak}일</strong>
-          <span>최장 연속</span>
+        <div class="growth-message">
+          오늘도 한 걸음 자라고 있어요 🌱
         </div>
 
       </div>
+    `;
 
-      <div class="growth-message">
-        오늘도 한 걸음 자라고 있어요 🌱
-      </div>
-
-    </div>
-  `;
-
-  if (window.openSheet) {
-    window.openSheet(html);
+    if (window.openSheet) {
+      window.openSheet(html);
+    }
   }
-}
 
   /*
    * 나의 QT 화면

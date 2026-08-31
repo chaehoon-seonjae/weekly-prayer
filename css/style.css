@@ -898,7 +898,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   z-index: 50;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .app-nav button {
