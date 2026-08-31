@@ -42,10 +42,12 @@ export async function renderFeedPage() {
     items = await loadFeed();
   } catch (error) {
     console.error(error);
+    if (appState.view !== 'qt' || appState.qtTab !== 'feed') return; // 다른 화면으로 이동했으면 덮어쓰지 않는다
     renderShell(shellHtml('<div class="dp-note">묵상을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>'));
     bindTabEvents();
     return;
   }
+  if (appState.view !== 'qt' || appState.qtTab !== 'feed') return; // 다른 화면으로 이동했으면 덮어쓰지 않는다
 
   appState.feed.items = items;
   const myProfileId = appState.auth.profile.id;

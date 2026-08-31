@@ -24,6 +24,7 @@ async function onSignedIn(session) {
   try {
     const profile = await loadProfile(session.user.id);
     if (!profile) {
+      appState.auth.user = null; // 재진입 가드를 풀어 다음 SIGNED_IN에서 다시 시도할 수 있게 한다
       renderProfilePending();
       return;
     }
