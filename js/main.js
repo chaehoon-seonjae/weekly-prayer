@@ -1,4 +1,4 @@
-import { appState, resetState, registerPage, render, renderShell } from './state.js';
+import { appState, resetState, registerPage, render } from './state.js';
 import { renderLoading, renderConnectionError, renderProfilePending } from './ui/screens.js';
 import { onAuthStateChange } from './auth/session.js';
 import { loadProfile, loadProfiles, renderMyPage } from './auth/profile.js';
