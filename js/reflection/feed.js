@@ -1,7 +1,8 @@
 import { appState, render, renderShell } from '../state.js';
 import { escapeHtml } from '../ui/dom.js';
+import { openSheet, closeSheet } from '../ui/sheet.js';
 import { showToast } from '../ui/toast.js';
-import { loadFeed, addReaction, removeReaction } from './api.js';
+import { loadFeed, addReaction, removeReaction, deleteReflection } from './api.js';
 
 function shellHtml(bodyHtml) {
   return `
@@ -61,6 +62,7 @@ export async function renderFeedPage() {
         const prayCount = reactions.filter(r => r.reaction_type === 'pray').length;
         const hasGrace = reactions.some(r => r.reaction_type === 'grace' && r.profile_id === myProfileId);
         const hasPray = reactions.some(r => r.reaction_type === 'pray' && r.profile_id === myProfileId);
+        const isMine = item.profile_id === myProfileId;
         return `
           <div class="feed-card">
             <div class="feed-top">
@@ -69,6 +71,7 @@ export async function renderFeedPage() {
                 <div class="feed-name">${escapeHtml(nickname)}</div>
                 <div class="feed-date">${escapeHtml(item.reflection_date)}</div>
               </div>
+              ${isMine ? `<button class="feed-delete" type="button" data-reflection-delete="${item.id}">삭제</button>` : ''}
             </div>
             <div class="feed-content">${escapeHtml(item.content)}</div>
             <div class="feed-actions">
@@ -82,6 +85,40 @@ export async function renderFeedPage() {
   renderShell(shellHtml(listHtml));
   bindTabEvents();
   bindReactionEvents();
+  bindDeleteEvents();
+}
+
+function bindDeleteEvents() {
+  document.querySelectorAll('[data-reflection-delete]').forEach(button => {
+    button.onclick = () => openDeleteConfirmSheet(button.dataset.reflectionDelete);
+  });
+}
+
+function openDeleteConfirmSheet(reflectionId) {
+  const html = `
+    <div class="confirm-box">
+      <p>이 묵상을 삭제할까요?<br/>받은 반응도 함께 사라져요.</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel" id="btnCancel">취소</button>
+        <button type="button" class="confirm-delete" id="btnConfirmDelete">삭제하기</button>
+      </div>
+    </div>
+  `;
+  const sheet = openSheet(html);
+  sheet.querySelector('#btnCancel').onclick = closeSheet;
+  sheet.querySelector('#btnConfirmDelete').onclick = async () => {
+    try {
+      await deleteReflection(reflectionId);
+      // 나의 QT 탭이 부팅 시 캐시(appState.qt.myReflections)를 읽으므로 함께 갱신한다.
+      appState.qt.myReflections = appState.qt.myReflections.filter(r => String(r.id) !== reflectionId);
+      closeSheet();
+      showToast('삭제되었어요');
+      await renderFeedPage();
+    } catch (error) {
+      console.error(error);
+      showToast('삭제 중 오류가 발생했어요');
+    }
+  };
 }
 
 function bindReactionEvents() {

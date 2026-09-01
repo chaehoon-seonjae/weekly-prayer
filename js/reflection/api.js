@@ -33,6 +33,15 @@ export async function updateReflection(reflectionId, content) {
   return data;
 }
 
+// DELETE는 RLS가 본인 것만 허용하고(001 reflections_delete_self), 반응은 FK cascade로 함께 삭제된다.
+export async function deleteReflection(reflectionId) {
+  const { error } = await supabase
+    .from('reflections')
+    .delete()
+    .eq('id', reflectionId);
+  if (error) throw error;
+}
+
 // 전체 사용자 피드: 작성자 닉네임·프로필 이미지와 반응 행을 임베딩으로 함께 가져온다.
 export async function loadFeed() {
   const { data, error } = await supabase

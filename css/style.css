@@ -799,6 +799,17 @@ body {
   color: var(--sky-deep);
 }
 
+.feed-delete {
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--slate);
+  font-size: 12px;
+  align-self: flex-start;
+}
+
 .my-card,
 .auth-card {
   padding: 16px;
