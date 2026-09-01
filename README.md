@@ -97,25 +97,32 @@ QT를 하지 않은 날이 있어도 이전 단계로 돌아가지 않습니다.
 ```text
 /
 ├── index.html
-├── app.js
-├── style.css
-├── features/
-│   ├── qt/
-│   │   ├── qt-core.js
-│   │   ├── qt-data.js
-│   │   ├── qt-render.js
-│   │   └── qt.js
-│   └── prayer/
-│       ├── prayer-core.js
-│       ├── prayer-render.js
-│       └── prayer.js
+├── package.json
+├── css/
+│   └── style.css
+├── assets/
+│   └── plants/          # 식물 성장 단계 이미지
+├── js/
+│   ├── main.js          # 앱 진입점 (부팅 시 데이터 로드)
+│   ├── state.js         # 전역 상태 (appState)
+│   ├── supabase.js      # Supabase 클라이언트
+│   ├── auth/            # 로그인 / 회원가입 / 세션 / 프로필
+│   ├── qt/              # QT 캘린더 / 연속 기록 / 식물 성장
+│   ├── reflection/      # 묵상 작성 / 피드 / 반응
+│   ├── prayer/          # 주간 기도제목
+│   ├── ui/              # 시트 / 토스트 / 네비게이션 등 공용 UI
+│   └── util/            # 날짜 유틸
 ├── supabase/
-│   └── qt_schema.sql
-├── README.md
-└── .gitignore
+│   ├── 001_schema.sql   # 테이블 + RLS 정책 (정본)
+│   ├── 002_migrate.sql  # 레거시 데이터 이관
+│   ├── 002b_prayers_member_nullable.sql
+│   ├── 002c_legacy_tables_authenticated_policies.sql
+│   └── rls_check.sql    # RLS 동작 점검 쿼리
+├── tests/               # 순수 로직 단위 테스트
+└── README.md
 ```
 
-> 기능별 모듈이 features/qt, features/prayer 아래에서 관리되도록 정리했습니다.
+> ⚠️ 루트의 `app.js`, `features/`, `supabase/qt_schema.sql`은 계정 기반 전환 이전의 **레거시**로, 현재 앱이 로드하지 않습니다. 새 작업은 `js/` 아래에서 진행해 주세요. (레거시 파일은 정리 예정)
 
 ---
 
@@ -142,7 +149,16 @@ Supabase URL과 Publishable Key를 등록합니다.
 
 ### 4. Database
 
-필요한 Supabase Table과 RLS Policy를 설정한 후 실행합니다.
+`supabase/001_schema.sql`을 Supabase SQL Editor에서 실행해
+테이블과 RLS Policy를 설정한 후 실행합니다.
+
+### 5. Test
+
+```bash
+npm test
+```
+
+Node 내장 test runner를 사용하므로 별도 의존성 설치가 필요 없습니다.
 
 ---
 
